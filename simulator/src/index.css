@@ -164,6 +164,18 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   box-shadow: 0 0 8px #ef444444;
 }
 
+/* ── shared engine board (center column) ─────────────────────────────────── */
+
+.engine-board-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
 /* ── inline action prompt ────────────────────────────────────────────────── */
 
 .action-prompt {

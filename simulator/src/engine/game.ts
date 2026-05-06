@@ -148,22 +148,19 @@ function playerName(p: PlayerId): string {
 }
 
 // Place an engine card into the engine control board and check if full
-function playToEngineBoard(state: GameState, player: PlayerId, card: CardType): GameState {
-  const newBoard = [...state.engineBoards[player], card];
-  const boards = state.engineBoards.map((b, i) => i === player ? newBoard : b) as [CardType[], CardType[]];
-  return { ...state, engineBoards: boards };
+function playToEngineBoard(state: GameState, _player: PlayerId, card: CardType): GameState {
+  return { ...state, engineBoard: [...state.engineBoard, card] };
 }
 
-function engineBoardFull(state: GameState, player: PlayerId): boolean {
-  return state.engineBoards[player].length >= 6;
+function engineBoardFull(state: GameState, _player: PlayerId): boolean {
+  return state.engineBoard.length >= 6;
 }
 
-function clearEngineBoardToDiscard(state: GameState, player: PlayerId): GameState {
-  const cards = state.engineBoards[player];
+function clearEngineBoardToDiscard(state: GameState, _player: PlayerId): GameState {
   return {
     ...state,
-    engineBoards: state.engineBoards.map((b, i) => i === player ? [] : b) as [CardType[], CardType[]],
-    engineDiscard: [...state.engineDiscard, ...cards],
+    engineBoard: [],
+    engineDiscard: [...state.engineDiscard, ...state.engineBoard],
   };
 }
 

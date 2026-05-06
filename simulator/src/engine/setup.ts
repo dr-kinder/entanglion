@@ -98,7 +98,7 @@ export function createInitialState(difficulty: 'easy' | 'normal' | 'hard' = 'nor
     shipPositions: [ship0, ship1],
     hands: [hand0, hand1],
     eventHands: [[], []],
-    engineBoards: [[], []],
+    engineBoard: [],
     engineDeck,
     engineDiscard: [],
     eventDeck,

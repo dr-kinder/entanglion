@@ -165,7 +165,7 @@ export interface GameState {
   hands: [CardType[], CardType[]];
   eventHands: [EventCardType[], EventCardType[]];
 
-  engineBoards: [CardType[], CardType[]]; // played cards in engine control (max 6 each)
+  engineBoard: CardType[]; // shared engine control board — 6 slots total; quantum event when full
 
   engineDeck: CardType[];
   engineDiscard: CardType[];

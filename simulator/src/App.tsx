@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { GamePhase } from './engine/types';
+import { GamePhase, CardType } from './engine/types';
 import { gameReducer, getNavigationDestinations } from './engine/game';
 import { createInitialState } from './engine/setup';
 import Board from './components/Board';
@@ -55,6 +55,7 @@ export default function App() {
         <div className="center-column">
           <Board state={state} />
           <DetectionTrack currentIndex={state.detectionIndex} />
+          <EngineBoard board={state.engineBoard} />
           <div className="status-bar">
             <strong style={{ color: p === 0 ? '#ef4444' : '#3b82f6' }}>
               {p === 0 ? '● Rubicon' : '● Mercurial'}
@@ -75,6 +76,27 @@ export default function App() {
           onPlayEvent={i => dispatch({ type: 'PLAY_EVENT', eventIndex: i })}
           onStartQubitInterconnect={() => dispatch({ type: 'START_QUBIT_INTERCONNECT' })}
         />
+      </div>
+    </div>
+  );
+}
+
+const CARD_COLORS: Record<CardType, string> = {
+  [CardType.H]: '#22d3ee', [CardType.X]: '#fb923c', [CardType.CNOT]: '#a78bfa',
+  [CardType.SWAP]: '#f472b6', [CardType.PROBE]: '#ef4444',
+};
+
+function EngineBoard({ board }: { board: CardType[] }) {
+  return (
+    <div className="engine-board-bar">
+      <span className="section-label">Engine Control ({board.length}/6)</span>
+      <div className="engine-board">
+        {Array(6).fill(null).map((_, i) => (
+          <div key={i} className="engine-slot"
+            style={board[i] ? { borderColor: CARD_COLORS[board[i]], color: CARD_COLORS[board[i]] } : {}}>
+            {board[i] ?? '·'}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export default function PlayerPanel({
   const hand = state.hands[player];
   const eventHand = state.eventHands[player];
   const components = state.playerComponents[player];
-  const board = state.engineBoards[player];
+  const board = state.engineBoard;
   const phase = state.phase;
 
   const canAct = isActive;
@@ -88,22 +88,6 @@ export default function PlayerPanel({
               </div>
             ))}
             {hand.length === 0 && <span className="empty-note">no cards</span>}
-          </div>
-        </div>
-
-        {/* Engine control board */}
-        <div className="section">
-          <div className="section-label">Engine Board ({board.length}/6)</div>
-          <div className="engine-board">
-            {Array(6).fill(null).map((_, i) => (
-              <div
-                key={i}
-                className="engine-slot"
-                style={board[i] ? { borderColor: CARD_COLORS[board[i]], color: CARD_COLORS[board[i]] } : {}}
-              >
-                {board[i] ?? '·'}
-              </div>
-            ))}
           </div>
         </div>
 
