@@ -115,11 +115,10 @@ const COMPONENT_ABBREV: Record<ComponentType, string> = {
 
 interface BoardProps {
   state: GameState;
-  highlightedPlanets?: Planet[];
-  onPlanetClick?: (p: Planet) => void;
 }
 
-export default function Board({ state, highlightedPlanets = [], onPlanetClick }: BoardProps) {
+export default function Board({ state }: BoardProps) {
+  const highlightedPlanets: Planet[] = [];
   const [s0, s1] = state.shipPositions;
 
   function midpoint(a: Planet, b: Planet): [number, number] {
@@ -189,11 +188,7 @@ export default function Board({ state, highlightedPlanets = [], onPlanetClick }:
         const component = state.componentLocations[planet];
 
         return (
-          <g
-            key={planet}
-            onClick={() => onPlanetClick?.(planet)}
-            style={{ cursor: onPlanetClick ? 'pointer' : 'default' }}
-          >
+          <g key={planet}>
             {isHighlighted && (
               <circle cx={cx} cy={cy} r={PLANET_RADIUS + 8} fill={color} opacity={0.3} />
             )}

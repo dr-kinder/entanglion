@@ -398,18 +398,11 @@ function handleNavigate(state: GameState, cardIndex: number, chosenDest?: Planet
   s = { ...s, shipPositions: newPositions };
   s = log(s, `${playerName(p)} plays ${card} — moves to ${formatPlanet(destination)}.`);
 
-  // If moved to Entanglion, check orbital defenses (unless bypassed)
+  // If moved to Entanglion, roll orbital defenses immediately (no pause)
   if (enteredEntanglion) {
     s = drawEngineCard(s, p);
-    if (s.mechanicBypassActive) {
-      s = log(s, 'Orbital defenses bypassed!');
-      s = { ...s, mechanicBypassActive: false };
-      return finishNavigate(s, p, isMechanic, null);
-    }
-    s = { ...s,
-      phase: GamePhase.ORBITAL_DEFENSE_ROLL,
-      pendingNavigationDestination: destination,
-    };
+    s = { ...s, pendingNavigationDestination: destination };
+    s = handleOrbitalDefenseRoll(s);
     return s;
   }
 
@@ -659,8 +652,7 @@ function handlePlayEvent(state: GameState, eventIndex: number): GameState {
       return s;
 
     case EventCardType.HEISENBERG:
-      s = { ...s, phase: GamePhase.HEISENBERG_ROLL };
-      return s;
+      return handleHeisenbergRoll(s);
 
     case EventCardType.QUANTUM_TUNNEL:
       // Bypass orbital OR ground defenses this turn (does not count as action)

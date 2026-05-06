@@ -1,54 +1,27 @@
-import React, { useReducer, useState } from 'react';
-import { GamePhase, Planet } from './engine/types';
-import { gameReducer, GameAction, getNavigationDestinations } from './engine/game';
+import React, { useReducer } from 'react';
+import { GamePhase } from './engine/types';
+import { gameReducer, getNavigationDestinations } from './engine/game';
 import { createInitialState } from './engine/setup';
 import Board from './components/Board';
 import DetectionTrack from './components/DetectionTrack';
 import PlayerPanel from './components/PlayerPanel';
 import GameLog from './components/GameLog';
-import Modal from './components/Modal';
+import ActionPrompt from './components/Modal';
 import './index.css';
 
 const INITIAL = createInitialState('normal');
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, INITIAL);
-
-  const [pendingNavCard, setPendingNavCard] = useState<number | null>(null);
-  const [pendingNavDests, setPendingNavDests] = useState<Planet[]>([]);
+  const p = state.currentPlayer;
 
   function handleNavigate(cardIndex: number) {
-    if (state.phase !== GamePhase.ACTION_SELECT && state.phase !== GamePhase.THE_MECHANIC_ACTIVE) return;
+    const phase = state.phase;
+    if (phase !== GamePhase.ACTION_SELECT && phase !== GamePhase.THE_MECHANIC_ACTIVE) return;
     const dests = getNavigationDestinations(state, cardIndex);
-
-    if (dests.length === 0) {
-      dispatch({ type: 'NAVIGATE', cardIndex });
-      return;
-    }
-
-    if (dests.length === 1) {
-      dispatch({ type: 'NAVIGATE', cardIndex, destination: dests[0] });
-      return;
-    }
-
-    setPendingNavCard(cardIndex);
-    setPendingNavDests(dests);
+    // Always dispatch with the first (or only) destination — no ambiguity with current transition table
+    dispatch({ type: 'NAVIGATE', cardIndex, destination: dests[0] });
   }
-
-  function handleSelectDestination(planet: Planet) {
-    if (pendingNavCard === null) return;
-    dispatch({ type: 'NAVIGATE', cardIndex: pendingNavCard, destination: planet });
-    setPendingNavCard(null);
-    setPendingNavDests([]);
-  }
-
-  function handleCancelNav() {
-    setPendingNavCard(null);
-    setPendingNavDests([]);
-  }
-
-  const p = state.currentPlayer;
-  const highlightedPlanets = pendingNavCard !== null ? pendingNavDests : [];
 
   return (
     <div className="app">
@@ -80,26 +53,15 @@ export default function App() {
         />
 
         <div className="center-column">
-          <Board
-            state={state}
-            highlightedPlanets={highlightedPlanets}
-            onPlanetClick={pendingNavCard !== null ? handleSelectDestination : undefined}
-          />
+          <Board state={state} />
           <DetectionTrack currentIndex={state.detectionIndex} />
           <div className="status-bar">
-            {state.gameResult === 'playing' ? (
-              <span>
-                <strong style={{ color: p === 0 ? '#ef4444' : '#3b82f6' }}>
-                  {p === 0 ? '● Rubicon' : '● Mercurial'}
-                </strong>
-                {' — '}{statusText(state)}
-              </span>
-            ) : (
-              <span style={{ color: state.gameResult === 'win' ? '#4ade80' : '#f87171' }}>
-                {state.gameResult === 'win' ? '🎉 You Win!' : '💀 Game Over'}
-              </span>
-            )}
+            <strong style={{ color: p === 0 ? '#ef4444' : '#3b82f6' }}>
+              {p === 0 ? '● Rubicon' : '● Mercurial'}
+            </strong>
+            {' — '}{statusText(state)}
           </div>
+          <ActionPrompt state={state} dispatch={dispatch} />
           <GameLog entries={state.log} />
         </div>
 
@@ -114,31 +76,19 @@ export default function App() {
           onStartQubitInterconnect={() => dispatch({ type: 'START_QUBIT_INTERCONNECT' })}
         />
       </div>
-
-      <Modal
-        state={state}
-        dispatch={dispatch}
-        pendingNavCard={pendingNavCard}
-        pendingNavDests={pendingNavDests}
-        onSelectDestination={handleSelectDestination}
-        onCancelNav={handleCancelNav}
-      />
     </div>
   );
 }
 
-function statusText(state: GameState): string {
+function statusText(state: Parameters<typeof gameReducer>[0]): string {
   switch (state.phase) {
-    case GamePhase.ACTION_SELECT: return 'Select an action';
-    case GamePhase.ORBITAL_DEFENSE_ROLL: return 'Roll for orbital defenses!';
-    case GamePhase.THE_MECHANIC_ACTIVE: return 'The Mechanic — play up to 2 cards';
-    case GamePhase.HEISENBERG_ROLL: return 'Heisenberg — roll to teleport';
-    case GamePhase.BENNETT_SELECT: return 'Bennett — transfer a component';
-    case GamePhase.PHYSICAL_QUBITS_PLACE: return 'Choose Centarious landing planet';
-    case GamePhase.QUBIT_INTERCONNECT_OPTIONAL: return 'Optional: Qubit Interconnect exchange';
+    case GamePhase.ACTION_SELECT:              return 'Select an action';
+    case GamePhase.THE_MECHANIC_ACTIVE:        return 'The Mechanic — play up to 2 cards';
+    case GamePhase.BENNETT_SELECT:             return 'Bennett — transfer a component';
+    case GamePhase.PHYSICAL_QUBITS_PLACE:      return 'Physical Qubits — choose landing planet';
+    case GamePhase.QUBIT_INTERCONNECT_OPTIONAL:return 'Optional: Qubit Interconnect exchange';
+    case GamePhase.GAME_OVER:
+      return state.gameResult === 'win' ? '🎉 You win!' : '💀 Game over';
     default: return '';
   }
 }
-
-// Type alias to keep statusText signature clean
-type GameState = Parameters<typeof gameReducer>[0];

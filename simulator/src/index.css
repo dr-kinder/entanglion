@@ -164,6 +164,48 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   box-shadow: 0 0 8px #ef444444;
 }
 
+/* ── inline action prompt ────────────────────────────────────────────────── */
+
+.action-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: #1e293b;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.prompt-label {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.prompt-btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--accent);
+  background: #f1c40f11;
+  color: var(--accent);
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.prompt-btn:hover {
+  background: #f1c40f22;
+}
+.prompt-btn-done {
+  border-color: var(--text-dim);
+  background: transparent;
+  color: var(--text-dim);
+}
+.prompt-btn-done:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
 /* ── game log ────────────────────────────────────────────────────────────── */
 
 .game-log {
