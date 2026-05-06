@@ -451,7 +451,8 @@ function computeNavigation(
     const dest = getEntanglionDestination(myPos, card, p);
     if (!dest) return null; // no movement for this player/card/planet combo
 
-    return { newPositions: [dest, dest], destination: dest, enteredEntanglion: false };
+    // Moving within Entanglion to a new planet — always triggers orbital defense
+    return { newPositions: [dest, dest], destination: dest, enteredEntanglion: true };
   }
 
   // Outside Entanglion
