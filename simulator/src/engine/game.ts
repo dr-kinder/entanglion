@@ -192,7 +192,8 @@ function drawEventCard(state: GameState): [GameState, EventCardType | null] {
   return [s, card];
 }
 
-// Trigger a quantum event: draw event card + clear engine board
+// Trigger a quantum event: draw event card, resolve it, then clear engine board.
+// Clearing is part of the procedure regardless of which trigger caused the event.
 function triggerQuantumEvent(state: GameState): GameState {
   let s = state;
   const player = s.currentPlayer;
@@ -200,22 +201,27 @@ function triggerQuantumEvent(state: GameState): GameState {
   const [s2, card] = drawEventCard(s);
   s = s2;
 
-  if (!card) return s;
+  if (card) {
+    s = log(s, `🌀 Quantum event: ${formatEventCard(card)}`);
 
-  s = log(s, `🌀 Quantum event: ${formatEventCard(card)}`);
-
-  // Hold-in-hand cards go to the current player's event hand
-  if (HOLD_IN_HAND_EVENTS.has(card)) {
-    const newEventHands = s.eventHands.map((eh, i) =>
-      i === player ? [...eh, card] : eh
-    ) as [EventCardType[], EventCardType[]];
-    s = { ...s, eventHands: newEventHands };
-    s = log(s, `${playerName(player)} keeps ${formatEventCard(card)} in hand.`);
-    return s;
+    if (HOLD_IN_HAND_EVENTS.has(card)) {
+      const newEventHands = s.eventHands.map((eh, i) =>
+        i === player ? [...eh, card] : eh
+      ) as [EventCardType[], EventCardType[]];
+      s = { ...s, eventHands: newEventHands };
+      s = log(s, `${playerName(player)} keeps ${formatEventCard(card)} in hand.`);
+    } else {
+      s = resolveEventCard(s, card);
+    }
   }
 
-  // Immediate effect cards
-  return resolveEventCard(s, card);
+  // Always clear the engine board as part of performing a quantum event
+  if (s.engineBoard.length > 0) {
+    s = log(s, `Engine control board cleared (${s.engineBoard.length} card${s.engineBoard.length !== 1 ? 's' : ''} discarded).`);
+    s = clearEngineBoardToDiscard(s, player);
+  }
+
+  return s;
 }
 
 function resolveEventCard(state: GameState, card: EventCardType): GameState {
@@ -482,9 +488,8 @@ function finishNavigate(state: GameState, player: PlayerId, isMechanic: boolean,
 
   // Check if engine board is full after this play
   if (engineBoardFull(s, player)) {
-    s = log(s, `${playerName(player)}'s engine board is full — quantum event!`);
-    s = triggerQuantumEvent(s);
-    s = clearEngineBoardToDiscard(s, player);
+    s = log(s, `Engine control board full — quantum event!`);
+    s = triggerQuantumEvent(s); // clears board internally
     if (s.gameResult !== 'playing') return s;
   }
 
@@ -539,9 +544,6 @@ function handleOrbitalDefenseRoll(state: GameState): GameState {
   const samePlace = dest0 === dest1;
   s = log(s, `Measurement collapses entangled state — Rubicon → ${dest0}, Mercurial → ${dest1}.${samePlace ? '' : ' Ships separate!'}`);
   s = { ...s, shipPositions: [dest0, dest1], pendingNavigationDestination: null };
-
-  // Clear engine board and end turn (detection already triggered event above)
-  s = clearEngineBoardToDiscard(s, p);
   return nextTurn(s);
 }
 
