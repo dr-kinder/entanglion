@@ -588,7 +588,16 @@ function handleRetrieve(state: GameState): GameState {
   s = log(s, `🚨 Away team detected! Ground defenses triggered.`);
   s = increaseDetection(s, 'Ground detection');
   if (s.gameResult !== 'playing') return s;
-  // Ships stay in orbit; no movement
+
+  // Detection collapses the entangled state — ships return to Centarious
+  if (anyPlayerHas(s, ComponentType.PHYSICAL_QUBITS)) {
+    s = log(s, 'Physical Qubits: choose which Centarious planets to place ships.');
+    s = { ...s, phase: GamePhase.PHYSICAL_QUBITS_PLACE, pendingPhysicalQubitsCount: 2 };
+    return s;
+  }
+  const [dest0, dest1] = measureEntangledState(pos);
+  s = log(s, `Entangled state collapses — Rubicon → ${dest0}, Mercurial → ${dest1}.`);
+  s = { ...s, shipPositions: [dest0, dest1] };
   return nextTurn(s);
 }
 
