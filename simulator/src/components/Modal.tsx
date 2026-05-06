@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  GameState, GamePhase, Planet, Galaxy, PLANET_GALAXY, ComponentType,
+  GameState, GamePhase, Planet, ComponentType,
 } from '../engine/types';
 import { formatComponent, GameAction } from '../engine/game';
 import type { PlayerId } from '../engine/types';
@@ -15,6 +15,10 @@ interface ActionPromptProps {
 
 export default function ActionPrompt({ state, dispatch }: ActionPromptProps) {
   const { phase, currentPlayer } = state;
+
+  if (phase === GamePhase.QUBIT_INTERCONNECT_OPTIONAL) {
+    return <QubitInterconnectPrompt state={state} dispatch={dispatch} />;
+  }
 
   if (phase === GamePhase.PHYSICAL_QUBITS_PLACE) {
     const count = state.pendingPhysicalQubitsCount;
@@ -92,4 +96,41 @@ export default function ActionPrompt({ state, dispatch }: ActionPromptProps) {
   }
 
   return null;
+}
+
+function QubitInterconnectPrompt({ state, dispatch }: { state: GameState; dispatch: (a: GameAction) => void }) {
+  const p = state.currentPlayer;
+  const other: PlayerId = p === 0 ? 1 : 0;
+  const myHand = state.hands[p];
+  const theirHand = state.hands[other];
+  const otherName = other === 0 ? 'Rubicon' : 'Mercurial';
+
+  const [myIdx, setMyIdx] = useState<number | null>(null);
+  const [theirIdx, setTheirIdx] = useState<number | null>(null);
+
+  return (
+    <div className="action-prompt" style={{ flexWrap: 'wrap', gap: 12 }}>
+      <span className="prompt-label">QI Exchange — give one, take one:</span>
+      <span className="prompt-label" style={{ color: '#94a3b8' }}>Your card:</span>
+      {myHand.map((c, i) => (
+        <button key={i}
+          className={`prompt-btn ${myIdx === i ? 'prompt-btn-selected' : ''}`}
+          onClick={() => setMyIdx(i)}>{c}</button>
+      ))}
+      <span className="prompt-label" style={{ color: '#94a3b8' }}>{otherName}'s card:</span>
+      {theirHand.map((c, i) => (
+        <button key={i}
+          className={`prompt-btn ${theirIdx === i ? 'prompt-btn-selected' : ''}`}
+          onClick={() => setTheirIdx(i)}>{c}</button>
+      ))}
+      <button className="prompt-btn"
+        disabled={myIdx === null || theirIdx === null}
+        onClick={() => {
+          if (myIdx !== null && theirIdx !== null)
+            dispatch({ type: 'QUBIT_INTERCONNECT_EXCHANGE', myCardIndex: myIdx, theirCardIndex: theirIdx });
+        }}>Exchange</button>
+      <button className="prompt-btn prompt-btn-done"
+        onClick={() => dispatch({ type: 'SKIP_QUBIT_INTERCONNECT' })}>Skip</button>
+    </div>
+  );
 }

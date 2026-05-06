@@ -217,6 +217,11 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   border-color: var(--text);
   color: var(--text);
 }
+.prompt-btn-selected {
+  border-color: var(--blue);
+  background: #3b82f622;
+  color: var(--blue);
+}
 
 /* ── game log ────────────────────────────────────────────────────────────── */
 
