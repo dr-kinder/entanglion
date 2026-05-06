@@ -26,6 +26,28 @@ export function rollD2(): Planet {
   return Math.random() < 0.5 ? Planet.ZERO : Planet.ONE;
 }
 
+// Collapse an entangled state to classical Centarious outcomes for both ships.
+// Returns [ship0_planet, ship1_planet] in Centarious, sampled correctly:
+//   Φ states: both qubits correlated  → always same planet (|00⟩ or |11⟩)
+//   Ψ states: both qubits anti-correlated → always opposite planets (|01⟩ or |10⟩)
+//   Ω states: all four combinations equally likely
+export function measureEntangledState(planet: Planet): [Planet, Planet] {
+  const coin = () => Math.random() < 0.5;
+  switch (planet) {
+    case Planet.PHI_PLUS:
+    case Planet.PHI_MINUS: {
+      const p = coin() ? Planet.ZERO : Planet.ONE;
+      return [p, p];
+    }
+    case Planet.PSI_PLUS:
+    case Planet.PSI_MINUS:
+      return coin() ? [Planet.ZERO, Planet.ONE] : [Planet.ONE, Planet.ZERO];
+    default:
+      // Omega states: independent 50/50 for each qubit
+      return [coin() ? Planet.ZERO : Planet.ONE, coin() ? Planet.ZERO : Planet.ONE];
+  }
+}
+
 function log(state: GameState, msg: string): GameState {
   return { ...state, log: [...state.log, msg] };
 }
@@ -521,9 +543,11 @@ function handleOrbitalDefenseRoll(state: GameState): GameState {
     return s;
   }
 
-  const centDest = rollD2();
-  s = log(s, `Both ships jump to Centarious ${centDest} (Centarious die roll).`);
-  s = { ...s, shipPositions: [centDest, centDest], pendingNavigationDestination: null };
+  const currentPlanet = s.shipPositions[0]; // both ships on same planet in Entanglion
+  const [dest0, dest1] = measureEntangledState(currentPlanet);
+  const samePlace = dest0 === dest1;
+  s = log(s, `Measurement collapses entangled state — Rubicon → ${dest0}, Mercurial → ${dest1}.${samePlace ? '' : ' Ships separate!'}`);
+  s = { ...s, shipPositions: [dest0, dest1], pendingNavigationDestination: null };
 
   // Clear engine board and end turn (detection already triggered event above)
   s = clearEngineBoardToDiscard(s, p);
